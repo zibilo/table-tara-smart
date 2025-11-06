@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SelectedOption } from "@/pages/Menu";
 
 interface CartItem {
   id: string;
@@ -22,14 +22,15 @@ interface CartItem {
   price: number;
   quantity: number;
   comment?: string;
+  selectedOptions?: SelectedOption[];
 }
 
 interface CartSheetProps {
   cart: CartItem[];
   isOpen: boolean;
   onClose: () => void;
-  onUpdateItem: (dishId: string, quantity: number, comment?: string) => void;
-  onRemoveItem: (dishId: string) => void;
+  onUpdateItem: (itemIndex: number, quantity: number, comment?: string) => void;
+  onRemoveItem: (itemIndex: number) => void;
 }
 
 const CartSheet = ({
@@ -43,8 +44,17 @@ const CartSheet = ({
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const getItemTotal = (item: CartItem) => {
+    const basePrice = item.price;
+    const optionsPrice = item.selectedOptions?.reduce(
+      (sum, opt) => sum + opt.priceModifier,
+      0
+    ) || 0;
+    return (basePrice + optionsPrice) * item.quantity;
+  };
+
   const getTotal = () => {
-    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return cart.reduce((sum, item) => sum + getItemTotal(item), 0);
   };
 
   const handleSubmitOrder = async () => {
@@ -92,8 +102,9 @@ const CartSheet = ({
         dish_id: item.id,
         quantity: item.quantity,
         unit_price: item.price,
-        subtotal: item.price * item.quantity,
+        subtotal: getItemTotal(item),
         comment: item.comment || null,
+        options_selected: item.selectedOptions ? JSON.parse(JSON.stringify(item.selectedOptions)) : [],
       }));
 
       const { error: itemsError } = await supabase
@@ -145,17 +156,32 @@ const CartSheet = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {cart.map((item) => (
-                <div key={item.id} className="bg-muted/30 rounded-lg p-4 space-y-3">
+              {cart.map((item, index) => (
+                <div key={`${item.id}-${index}`} className="bg-muted/30 rounded-lg p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h4 className="font-semibold">{item.name}</h4>
                       <p className="text-sm text-muted-foreground">
                         {item.price.toFixed(2)} € × {item.quantity}
                       </p>
+                      {item.selectedOptions && item.selectedOptions.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {item.selectedOptions.map((opt, optIdx) => (
+                            <div key={optIdx} className="text-xs text-muted-foreground flex items-center gap-1">
+                              <span>• {opt.optionName}</span>
+                              {opt.priceModifier !== 0 && (
+                                <span className="text-primary">
+                                  ({opt.priceModifier > 0 ? "+" : ""}
+                                  {opt.priceModifier.toFixed(2)} €)
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <Badge variant="secondary">
-                      {(item.price * item.quantity).toFixed(2)} €
+                      {getItemTotal(item).toFixed(2)} €
                     </Badge>
                   </div>
 
@@ -165,7 +191,7 @@ const CartSheet = ({
                       size="icon"
                       className="h-8 w-8"
                       onClick={() =>
-                        onUpdateItem(item.id, item.quantity - 1, item.comment)
+                        onUpdateItem(index, item.quantity - 1, item.comment)
                       }
                     >
                       <Minus className="h-4 w-4" />
@@ -175,7 +201,7 @@ const CartSheet = ({
                       value={item.quantity}
                       onChange={(e) =>
                         onUpdateItem(
-                          item.id,
+                          index,
                           parseInt(e.target.value) || 1,
                           item.comment
                         )
@@ -188,7 +214,7 @@ const CartSheet = ({
                       size="icon"
                       className="h-8 w-8"
                       onClick={() =>
-                        onUpdateItem(item.id, item.quantity + 1, item.comment)
+                        onUpdateItem(index, item.quantity + 1, item.comment)
                       }
                     >
                       <Plus className="h-4 w-4" />
@@ -197,7 +223,7 @@ const CartSheet = ({
                       variant="destructive"
                       size="icon"
                       className="h-8 w-8 ml-auto"
-                      onClick={() => onRemoveItem(item.id)}
+                      onClick={() => onRemoveItem(index)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -207,7 +233,7 @@ const CartSheet = ({
                     placeholder="Commentaire (ex: sans oignon, bien cuit...)"
                     value={item.comment || ""}
                     onChange={(e) =>
-                      onUpdateItem(item.id, item.quantity, e.target.value)
+                      onUpdateItem(index, item.quantity, e.target.value)
                     }
                     className="min-h-[60px] text-sm"
                   />

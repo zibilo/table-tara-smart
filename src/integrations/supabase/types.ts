@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      dish_option_groups: {
+        Row: {
+          allow_multiple: boolean
+          created_at: string
+          dish_id: string
+          display_order: number
+          id: string
+          is_required: boolean
+          name: string
+        }
+        Insert: {
+          allow_multiple?: boolean
+          created_at?: string
+          dish_id: string
+          display_order?: number
+          id?: string
+          is_required?: boolean
+          name: string
+        }
+        Update: {
+          allow_multiple?: boolean
+          created_at?: string
+          dish_id?: string
+          display_order?: number
+          id?: string
+          is_required?: boolean
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dish_option_groups_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dish_options: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          option_group_id: string
+          price_modifier: number
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+          option_group_id: string
+          price_modifier?: number
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          option_group_id?: string
+          price_modifier?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dish_options_option_group_id_fkey"
+            columns: ["option_group_id"]
+            isOneToOne: false
+            referencedRelation: "dish_option_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dishes: {
         Row: {
           category: string
@@ -67,6 +140,7 @@ export type Database = {
           created_at: string
           dish_id: string
           id: string
+          options_selected: Json | null
           order_id: string
           quantity: number
           subtotal: number
@@ -77,6 +151,7 @@ export type Database = {
           created_at?: string
           dish_id: string
           id?: string
+          options_selected?: Json | null
           order_id: string
           quantity: number
           subtotal: number
@@ -87,6 +162,7 @@ export type Database = {
           created_at?: string
           dish_id?: string
           id?: string
+          options_selected?: Json | null
           order_id?: string
           quantity?: number
           subtotal?: number

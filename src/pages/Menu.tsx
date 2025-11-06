@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DishCard from "@/components/DishCard";
 import CartSheet from "@/components/CartSheet";
+import DishCustomizationDialog from "@/components/DishCustomizationDialog";
 
 interface Dish {
   id: string;
@@ -18,9 +19,18 @@ interface Dish {
   is_available: boolean;
 }
 
+export interface SelectedOption {
+  groupId: string;
+  groupName: string;
+  optionId: string;
+  optionName: string;
+  priceModifier: number;
+}
+
 export interface CartItem extends Dish {
   quantity: number;
   comment?: string;
+  selectedOptions?: SelectedOption[];
 }
 
 const Menu = () => {
@@ -28,6 +38,8 @@ const Menu = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+  const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -72,37 +84,46 @@ const Menu = () => {
     }
   };
 
-  const addToCart = (dish: Dish) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === dish.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === dish.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prev, { ...dish, quantity: 1 }];
-    });
-    
+  const handleDishClick = (dish: Dish) => {
+    setSelectedDish(dish);
+    setIsCustomizationOpen(true);
+  };
+
+  const addToCart = (
+    dish: Dish,
+    selectedOptions: SelectedOption[] = [],
+    comment: string = ""
+  ) => {
+    setCart((prev) => [
+      ...prev,
+      {
+        ...dish,
+        quantity: 1,
+        selectedOptions,
+        comment: comment || undefined,
+      },
+    ]);
+
     toast({
       title: "Ajouté au panier",
       description: `${dish.name} a été ajouté`,
     });
   };
 
-  const updateCartItem = (dishId: string, quantity: number, comment?: string) => {
+  const updateCartItem = (itemIndex: number, quantity: number, comment?: string) => {
     if (quantity === 0) {
-      setCart((prev) => prev.filter((item) => item.id !== dishId));
+      setCart((prev) => prev.filter((_, idx) => idx !== itemIndex));
     } else {
       setCart((prev) =>
-        prev.map((item) =>
-          item.id === dishId ? { ...item, quantity, comment } : item
+        prev.map((item, idx) =>
+          idx === itemIndex ? { ...item, quantity, comment } : item
         )
       );
     }
   };
 
-  const removeFromCart = (dishId: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== dishId));
+  const removeFromCart = (itemIndex: number) => {
+    setCart((prev) => prev.filter((_, idx) => idx !== itemIndex));
   };
 
   const getTotalItems = () => {
@@ -165,7 +186,7 @@ const Menu = () => {
                       <DishCard
                         key={dish.id}
                         dish={dish}
-                        onAddToCart={addToCart}
+                        onAddToCart={handleDishClick}
                       />
                     ))}
                 </div>
@@ -174,6 +195,14 @@ const Menu = () => {
           </div>
         )}
       </main>
+
+      {/* Customization Dialog */}
+      <DishCustomizationDialog
+        dish={selectedDish}
+        isOpen={isCustomizationOpen}
+        onClose={() => setIsCustomizationOpen(false)}
+        onAddToCart={addToCart}
+      />
 
       {/* Cart Sheet */}
       <CartSheet
