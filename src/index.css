@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -50,6 +52,14 @@ All colors MUST be HSL.
     --shadow-medium: 0 4px 16px hsl(24 10% 10% / 0.12);
     --shadow-large: 0 8px 32px hsl(24 10% 10% / 0.16);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Kawaii colors */
+    --kawaii-blue: 195 100% 85%;
+    --kawaii-green: 120 60% 75%;
+    --kawaii-yellow: 48 100% 80%;
+    --kawaii-pink: 330 100% 85%;
+    --kawaii-orange: 30 100% 75%;
+    --kawaii-purple: 270 75% 75%;
   }
 
   .dark {
@@ -96,9 +106,24 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Fredoka', system-ui, -apple-system, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold tracking-tight;
   }
+}
+
+.kawaii-gradient {
+  background: linear-gradient(180deg, 
+    hsl(var(--kawaii-blue)) 0%, 
+    hsl(var(--kawaii-green)) 50%, 
+    hsl(var(--kawaii-yellow)) 100%
+  );
+}
+
+.kawaii-card {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
