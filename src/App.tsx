@@ -8,6 +8,8 @@ import TableScan from "./pages/TableScan";
 import Menu from "./pages/Menu";
 import MenuKids from "./pages/MenuKids";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,7 +26,8 @@ const App = () => (
           <Route path="/menu" element={<Menu />} />
           <Route path="/menu-kids" element={<MenuKids />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
